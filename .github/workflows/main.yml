@@ -17,23 +17,21 @@ jobs:
 
       - name: Clone OpenWrt and Package
         run: |
-          # Скачиваем стабильные исходники вашей ветки 25.12
+          # Скачиваем чистые исходники ImmortalWrt
           git clone --depth 1 -b openwrt-25.12 https://github.com/immortalwrt/immortalwrt.git
           cd immortalwrt
           
-          # Прописываем Амнезию как официальный фид пакетов в конфигурацию
+          # Прописываем Амнезию как локальный фид
           echo "src-git awg_feed https://github.com/2Grey/awg-openwrt.git" >> feeds.conf.default
+          ./scripts/feeds update awg_feed
+          ./scripts/feeds install -a -p awg_feed
           
-          # Обновляем и устанавливаем фиды
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
-          
-          # Выбираем архитектуру вашего Xiaomi Mi Router 3G
+          # Жестко задаем конфигурацию архитектуры роутера
           echo "CONFIG_TARGET_ramips=y" > .config
           echo "CONFIG_TARGET_ramips_mt7621=y" >> .config
           echo "CONFIG_TARGET_ramips_mt7621_DEVICE_xiaomi_mi-router-3g=y" >> .config
           
-          # Включаем компиляцию пакетов AmneziaWG
+          # Включаем ТОЛЬКО Амнезию, отключая все остальные зависимости
           echo "CONFIG_PACKAGE_kmod-amneziawg=m" >> .config
           echo "CONFIG_PACKAGE_amneziawg-tools=y" >> .config
           echo "CONFIG_PACKAGE_luci-proto-amneziawg=y" >> .config
@@ -41,13 +39,13 @@ jobs:
           # Подменяем хэш ядра в метаданных сборщика на ваш личный
           sed -i 's/LINUX_VERMAGIC:=.*/LINUX_VERMAGIC:=6a2bf6a139096c2bbdc3e52f4b809523/g' include/kernel-defaults.mk
           
-          # Генерируем конфигурацию
+          # Накатываем минимальный дефолтный конфиг БЕЗ полной проверки системы
           make defconfig
           
-          # Запускаем компиляцию пакетов из фида по их правильным именам
-          make package/feeds/awg_feed/amneziawg-tools/compile V=s IGNORE_ERRORS=m
-          make package/feeds/awg_feed/kmod-amneziawg/compile V=s IGNORE_ERRORS=m
-          make package/feeds/awg_feed/luci-proto-amneziawg/compile V=s IGNORE_ERRORS=m
+          # Запускаем компиляцию СТРОГО пакетов Амнезии, полностью игнорируя общие инструменты (ИСПРАВЛЕНО!)
+          make package/feeds/awg_feed/amneziawg-tools/compile V=s
+          make package/feeds/awg_feed/kmod-amneziawg/compile V=s
+          make package/feeds/awg_feed/luci-proto-amneziawg/compile V=s
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
