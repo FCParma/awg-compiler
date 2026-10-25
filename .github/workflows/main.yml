@@ -17,36 +17,40 @@ jobs:
 
       - name: Clone OpenWrt and Package
         run: |
-          # Скачиваем чистые исходники ImmortalWrt
+          # 1. Скачиваем чистые исходники ImmortalWrt
           git clone --depth 1 -b openwrt-25.12 https://github.com/immortalwrt/immortalwrt.git
           cd immortalwrt
           
-          # Создаем папку загрузок dl и принудительно качаем туда РАБОЧИЙ архив Lua
+          # 2. Создаем папку dl и принудительно качаем туда рабочий архив Lua
           mkdir -p dl
-          wget -O dl/lua-5.1.5.tar.gz  https://sources.openwrt.org/lua-5.1.5.tar.gz
+          wget -O dl/lua-5.1.5.tar.gz https://sources.openwrt.org/lua-5.1.5.tar.gz
           
-          # Прописываем Амнезию как локальный фид
+          # 3. Прописываем Амнезию как локальный фид
           echo "src-git awg_feed https://github.com/2Grey/awg-openwrt.git" >> feeds.conf.default
           ./scripts/feeds update awg_feed
           ./scripts/feeds install -a -p awg_feed
           
-          # Жестко задаем конфигурацию архитектуры роутера
+          # 4. Жестко задаем конфигурацию архитектуры роутера Xiaomi 3G
           echo "CONFIG_TARGET_ramips=y" > .config
           echo "CONFIG_TARGET_ramips_mt7621=y" >> .config
           echo "CONFIG_TARGET_ramips_mt7621_DEVICE_xiaomi_mi-router-3g=y" >> .config
           
-          # Включаем Амнезию
+          # 5. Включаем Амнезию в конфигурации
           echo "CONFIG_PACKAGE_kmod-amneziawg=m" >> .config
           echo "CONFIG_PACKAGE_amneziawg-tools=y" >> .config
           echo "CONFIG_PACKAGE_luci-proto-amneziawg=y" >> .config
           
-          # Подменяем хэш ядра в метаданных сборщика на ваш личный
+          # 6. Подменяем хэш ядра в метаданных сборщика на ваш личный
           sed -i 's/LINUX_VERMAGIC:=.*/LINUX_VERMAGIC:=6a2bf6a139096c2bbdc3e52f4b809523/g' include/kernel-defaults.mk
           
-          # Накатываем минимальный дефолтный конфиг
+          # 7. Генерируем конфигурационную базу
           make defconfig
           
-          # Запускаем компиляцию пакетов Амнезии
+          # 8. Сначала собираем ВСЕ внутренние системные инструменты (ИСПРАВЛЕНО!)
+          make tools/install -j$(nproc)
+          make toolchain/install -j$(nproc)
+          
+          # 9. Теперь запускаем компиляцию пакетов Амнезии
           make package/feeds/awg_feed/amneziawg-tools/compile V=s IGNORE_ERRORS=m
           make package/feeds/awg_feed/kmod-amneziawg/compile V=s IGNORE_ERRORS=m
           make package/feeds/awg_feed/luci-proto-amneziawg/compile V=s IGNORE_ERRORS=m
