@@ -17,8 +17,8 @@ jobs:
 
       - name: Clone OpenWrt and Package
         run: |
-          # Скачиваем чистые исходники ImmortalWrt
-          git clone --depth 1 -b openwrt-25.12 https://github.com/immortalwrt/immortalwrt.git
+          # Скачиваем чистые исходники ImmortalWrt из ПРАВИЛЬНОЙ ветки master (ИСПРАВЛЕНО!)
+          git clone --depth 1 -b master https://github.com/immortalwrt/immortalwrt.git
           cd immortalwrt
           
           # Прописываем Амнезию как официальный фид пакетов в конфигурацию
@@ -44,7 +44,7 @@ jobs:
           # Генерируем конфигурацию
           make defconfig
           
-          # Запускаем компиляцию ВСЕХ пакетов из фида Амнезии (ИСПРАВЛЕНО!)
+          # Запускаем компиляцию всех пакетов из фида Амнезии
           make package/feeds/awg_feed/amneziawg-tools/compile V=s IGNORE_ERRORS=m
           make package/feeds/awg_feed/kmod-amneziawg/compile V=s IGNORE_ERRORS=m
           make package/feeds/awg_feed/luci-proto-amneziawg/compile V=s IGNORE_ERRORS=m
@@ -53,4 +53,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: amneziawg-packages
-          path: immortalwrt/bin/packages/mipsel_24kc/awg_feed/*amneziawg*
+          path: immortalwrt/bin/packages/mipsel_24kc/awg_feed/*
