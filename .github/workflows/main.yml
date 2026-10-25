@@ -22,7 +22,7 @@ jobs:
           cd immortalwrt
           
           # Прописываем Амнезию как официальный фид пакетов в конфигурацию
-          echo "src-git awg_feed https://github.com/2Grey/awg-openwrt.git >> feeds.conf.default
+          echo "src-git awg_feed https://github.com/2Grey/awg-openwrt.git" >> feeds.conf.default
           
           # Обновляем и устанавливаем фиды (теперь система сама скачает и проиндексирует пакет)
           ./scripts/feeds update -a
