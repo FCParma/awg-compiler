@@ -40,7 +40,10 @@ jobs:
           find . -name Makefile -exec sed -i 's/LINUX_VERMAGIC:=.*/LINUX_VERMAGIC:=6a2bf6a139096c2bbdc3e52f4b809523/g' {} \; || true
           sed -i 's/LINUX_VERMAGIC:=.*/LINUX_VERMAGIC:=6a2bf6a139096c2bbdc3e52f4b809523/g' include/kernel-defaults.mk || true
           
-          # 6. Запускаем точечную компиляцию модуля ядра Амнезии
+          # 6. СБОРКА ИНСТРУМЕНТА СЖАТИЯ (ИСПРАВЛЕНО: собираем только то, чего не хватало)
+          make tools/libdeflate/compile V=s
+          
+          # 7. Запускаем точечную компиляцию модуля ядра Амнезии
           make package/feeds/awg_feed/kmod-amneziawg/compile V=s IGNORE_ERRORS=m
 
       - name: Upload Artifacts
