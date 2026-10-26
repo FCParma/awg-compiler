@@ -21,22 +21,26 @@ jobs:
           git clone --depth 1 -b openwrt-25.12 https://github.com/immortalwrt/immortalwrt.git
           cd immortalwrt
           
-          # 2. Прописываем Амнезию как официальный фид пакетов
+          # 2. Создаем папку загрузок dl и принудительно подкладываем РАБОЧИЙ архив Lua из зеркала
+          mkdir -p dl
+          wget -O dl/lua-5.1.5.tar.gz https://sources.openwrt.org/lua-5.1.5.tar.gz
+          
+          # 3. Прописываем Амнезию как официальный фид пакетов
           echo "src-git awg_feed https://github.com/2Grey/awg-openwrt.git" >> feeds.conf.default
           ./scripts/feeds update awg_feed
           ./scripts/feeds install -a -p awg_feed
           
-          # 3. Настраиваем архитектуру вашего Xiaomi Mi Router 3G
+          # 4. Настраиваем архитектуру вашего Xiaomi Mi Router 3G
           echo "CONFIG_TARGET_ramips=y" > .config
           echo "CONFIG_TARGET_ramips_mt7621=y" >> .config
           echo "CONFIG_TARGET_ramips_mt7621_DEVICE_xiaomi_mi-router-3g=y" >> .config
           make defconfig
           
-          # 4. ИНЪЕКЦИЯ ХЭША: прописываем ваш уникальный хэш ядра в конфигурацию сборщика
+          # 5. ИНЪЕКЦИЯ ХЭША: прописываем ваш уникальный хэш ядра в конфигурацию сборщика
           find . -name Makefile -exec sed -i 's/LINUX_VERMAGIC:=.*/LINUX_VERMAGIC:=6a2bf6a139096c2bbdc3e52f4b809523/g' {} \; || true
           sed -i 's/LINUX_VERMAGIC:=.*/LINUX_VERMAGIC:=6a2bf6a139096c2bbdc3e52f4b809523/g' include/kernel-defaults.mk || true
           
-          # 5. Запускаем точечную компиляцию модуля ядра Амнезии
+          # 6. Запускаем точечную компиляцию модуля ядра Амнезии
           make package/feeds/awg_feed/kmod-amneziawg/compile V=s IGNORE_ERRORS=m
 
       - name: Upload Artifacts
